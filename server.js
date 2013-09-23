@@ -1,19 +1,65 @@
-var dbus = require('dbus-native');
 
-var bus = dbus.systemBus();
-//bus.connection.on('message', console.log);
-bus.addMatch("type='signal'");
+var upstart = require('./lib/upstart-events');
+var spawn = require('child_process').spawn;
+var nodemailer = require("nodemailer");
+var config = require("./config.js");
+console.log(config);
+var listenForKill =  function(job, cb){
+  upstart.on(job, function(state){
+    if(state !== "killed") return;
+    console.log("got kill");
 
-var upstart = bus.getService('com.ubuntu.Upstart');
-upstart.getInterface('/com/ubuntu/Upstart', 'com.ubuntu.Upstart0_6', function(err, e){
-  console.log('got interface');
-  console.log(err, e);
-  e.on('EventEmitted', function(msg, msg1){
-    console.log(msg, msg1);
+    cb();
   });
-  e.on('StateChanged', function(msg, msg1){
-    console.log("StateChanged");
-    console.log(msg, msg1);
-  });
+}
 
+var getTail = function(filename, lines, cb){
+  var tail = spawn('tail', ['-n', lines, filename]);
+  var fileLines = '';
+  tail.stdout.setEncoding('utf8');
+  tail.stdout.on('data', function (data){
+    fileLines = fileLines + data;
+  });
+  tail.on('close', function(){
+    cb(fileLines);
+  });
+}
+
+var createMail = function(fileLines, job){
+  var time = new Date().toUTCString();
+  var mailOptions = {
+    from: "WebRTC Ops <" + config.user + ">",
+    to: config.toemail,
+    subject: "Process Killed: " + job.name + " " + time,
+    text: "A process you care about may have been killed \n\n" + 
+      "process name: " + job.name + " \n " +
+      "time : " + time +
+      "log file: " + job.logfile + " \n\n" + fileLines
+  }
+  var smtpTransport = nodemailer.createTransport("SMTP", {
+    service: "Gmail",
+    auth: {
+      user: config.user,
+      pass: config.password
+    }
+  });
+  smtpTransport.sendMail(mailOptions, function(e, r){
+    if(e){
+      console.log(e);
+    }else{
+
+      console.log("Sent an alert email", r);
+    }
+  });
+}
+
+var jobList = config.jobList;
+
+jobList.forEach(function (job){
+  console.log('Subscribing to job', job);
+  listenForKill(job.name, function(){
+    getTail(job.logfile, 40, function(lines){
+      createMail(lines, job);
+    });
+  });
 });

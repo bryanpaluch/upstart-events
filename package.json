@@ -1,14 +1,15 @@
-{
-  "name": "upstart-dbus",
-  "version": "0.0.0",
-  "description": "",
-  "main": "index.js",
+{ 
+  "author" : "Bryan Paluch",
+  "name": "upstart-watcher",
+  "version": "0.0.1",
+  "description": " Watches upstart processes and mails their logs if they are killed",
+  "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "BSD-2-Clause",
+  "license": "MIT",
   "dependencies": {
-    "dbus-native": "0.0.13"
+    "dbus-native": "0.0.13",
+    "nodemailer": "~0.5.2"
   }
 }
