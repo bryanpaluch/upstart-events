@@ -58,7 +58,7 @@ var jobList = config.jobList;
 jobList.forEach(function (job){
   console.log('Subscribing to job', job);
   listenForKill(job.name, function(){
-    getTail(job.logfile, 40, function(lines){
+    getTail(job.logfile, 60, function(lines){
       createMail(lines, job);
     });
   });
