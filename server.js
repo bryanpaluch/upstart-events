@@ -2,6 +2,7 @@
 var upstart = require('./lib/upstart-events');
 var spawn = require('child_process').spawn;
 var nodemailer = require("nodemailer");
+var os = require("os");
 var config = require("./config.js");
 console.log(config);
 var listenForKill =  function(job, cb){
@@ -32,8 +33,9 @@ var createMail = function(fileLines, job){
     to: config.toemail,
     subject: "Process Killed: " + job.name + " " + time,
     text: "A process you care about may have been killed \n\n" + 
-      "process name: " + job.name + " \n " +
-      "time : " + time +
+      "process name: " + job.name + " \n" +
+      "time : " + time + " \n" +
+      "host : " + os.hostname() + " \n" +
       "log file: " + job.logfile + " \n\n" + fileLines
   }
   var smtpTransport = nodemailer.createTransport("SMTP", {
@@ -47,7 +49,7 @@ var createMail = function(fileLines, job){
     if(e){
       console.log(e);
     }else{
-
+      console.log(mailOptions);
       console.log("Sent an alert email", r);
     }
   });
