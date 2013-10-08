@@ -7,6 +7,7 @@ var config = require("./config.js");
 console.log(config);
 var listenForKill =  function(job, cb){
   upstart.on(job, function(state){
+    console.log("upstart event", state);
     if(state !== "killed") return;
     console.log("got kill");
 
