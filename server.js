@@ -4,7 +4,6 @@ var spawn = require('child_process').spawn;
 var nodemailer = require("nodemailer");
 var os = require("os");
 var config = require("./config.js");
-console.log(config);
 var listenForKill =  function(job, cb){
   upstart.on(job, function(state){
     console.log("upstart event", state);
